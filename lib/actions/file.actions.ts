@@ -22,7 +22,13 @@ export const uploadFile = async ({
   const { storage, databases } = await createAdminClient();
 
   try {
-    const inputFile = InputFile.fromBuffer(file, file.name);
+    if (!file || !file.name || file.size === 0) {
+  throw new Error("❌ Invalid or empty file provided to uploadFile");
+}
+const arrayBuffer = await file.arrayBuffer();
+
+const inputFile = InputFile.fromBuffer(Buffer.from(arrayBuffer), file.name);
+
 
     const bucketFile = await storage.createFile(
       appwriteConfig.bucketId,
@@ -37,10 +43,11 @@ export const uploadFile = async ({
       extension: getFileType(bucketFile.name).extension,
       size: bucketFile.sizeOriginal,
       owner: ownerId,
-      accountId,
+      // accountId,
       users: [],
       bucketFileId: bucketFile.$id,
     };
+
 
     const newFile = await databases
       .createDocument(
